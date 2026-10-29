@@ -32,10 +32,27 @@
     .page { min-height:100vh; padding:24px 0 0; }
     .profile { position:relative; width:min(480px,100%); min-height:calc(100vh - 24px); margin:0 auto; padding:0 24px; overflow:hidden; background:rgba(255,253,250,.94); border:1px solid rgba(235,220,211,.8); border-bottom:0; border-radius:34px 34px 0 0; box-shadow:0 12px 50px rgba(112,75,61,.08); }
     .topbar { height:64px; display:flex; align-items:center; justify-content:space-between; }
+    .top-actions { display:flex; align-items:center; gap:8px; }
     .wordmark { color:#745d55; font-family:Georgia,serif; font-size:15px; letter-spacing:.12em; }
     .icon-button { width:38px; height:38px; padding:0; display:grid; place-items:center; border:1px solid #f0e7e1; border-radius:50%; background:#fff; color:#6e5850; cursor:pointer; transition:background .2s,transform .2s; }
     .icon-button:hover { background:#fff4ef; transform:rotate(-7deg); }
     .icon-button svg { width:18px; height:18px; }
+    .music-toggle[aria-pressed="true"] { color:#fff; background:#e99a89; border-color:#e99a89; }
+    .music-toggle[aria-pressed="true"] svg { animation:music-wiggle .55s ease-in-out infinite alternate; }
+    .avatar-wrap::before { position:absolute; z-index:0; inset:-10px; content:""; border:1px solid rgba(233,154,137,.48); border-radius:42px; opacity:0; pointer-events:none; }
+    .avatar-wrap.arriving::before { animation:arrival-ring .95s ease-out both; }
+    .avatar-wrap.arriving .avatar { position:relative; z-index:1; animation:avatar-pop .72s cubic-bezier(.18,.8,.28,1.2) both; }
+    .avatar-wrap.arriving .heart-sticker { animation:sticker-pop .72s .2s cubic-bezier(.18,.8,.28,1.3) both; }
+    .arrival-burst { position:fixed; z-index:5; inset:0; overflow:hidden; pointer-events:none; }
+    .burst-particle { position:fixed; left:var(--left); top:var(--top); width:11px; height:11px; border-radius:2px; background:var(--color); opacity:0; transform:translate(-50%,-50%) scale(.2); }
+    .burst-particle.star { clip-path:polygon(50% 0,61% 37%,100% 50%,61% 62%,50% 100%,39% 62%,0 50%,39% 37%); border-radius:0; }
+    .burst-particle.dot { width:8px; height:8px; border-radius:50%; }
+    .arrival-burst.play .burst-particle { animation:firework 1.08s cubic-bezier(.15,.65,.35,1) var(--delay) both; }
+    @keyframes firework { 0% { opacity:0; transform:translate(-50%,-50%) scale(.2) rotate(0); } 12% { opacity:1; } 100% { opacity:0; transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.72) rotate(var(--turn)); } }
+    @keyframes arrival-ring { 0% { opacity:0; transform:scale(.78); } 28% { opacity:1; } 100% { opacity:0; transform:scale(1.28); } }
+    @keyframes avatar-pop { 0% { opacity:.65; transform:rotate(-3deg) scale(.82); } 72% { opacity:1; transform:rotate(2deg) scale(1.04); } 100% { transform:rotate(-3deg) scale(1); } }
+    @keyframes sticker-pop { 0% { opacity:0; transform:rotate(-22deg) scale(.35); } 70% { opacity:1; transform:rotate(15deg) scale(1.18); } 100% { transform:rotate(9deg) scale(1); } }
+    @keyframes music-wiggle { to { transform:rotate(9deg) scale(1.08); } }
     .intro { position:relative; padding:16px 0 32px; text-align:center; display:flex; flex-direction:column; align-items:center; }
     .avatar-wrap { position:relative; width:102px; height:102px; margin-bottom:18px; }
     .avatar { width:100%; height:100%; border:4px solid #fff; border-radius:36px; object-fit:cover; box-shadow:0 7px 20px rgba(165,112,92,.2); transform:rotate(-3deg); }
@@ -71,7 +88,7 @@
     .toast.show { opacity:1; transform:translate(-50%,0); }
     @media (max-width:520px) { .page { padding-top:0; } .profile { width:100%; min-height:100vh; padding:0 22px; border:0; border-radius:0; box-shadow:none; } .topbar { padding-top:max(10px,env(safe-area-inset-top)); } .footer { padding-bottom:max(34px,env(safe-area-inset-bottom)); } }
     @media (max-width:360px) { .profile { padding-right:17px; padding-left:17px; } .product { gap:11px; padding-right:11px; } .product img { flex-basis:68px; width:68px; height:68px; } .product-title { font-size:13px; } }
-    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { transition:none!important; scroll-behavior:auto!important; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
   </style>
 </head>
 
@@ -80,13 +97,17 @@
     <article class="profile" aria-label="with.my.hi 프로필">
       <div class="topbar">
         <span class="wordmark">little things, with love</span>
-        <button class="icon-button" id="share" aria-label="프로필 공유" title="공유">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-            stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 16V3m0 0L7.5 7.5M12 3l4.5 4.5" />
-            <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
-          </svg>
-        </button>
+        <div class="top-actions">
+          <button class="icon-button music-toggle" id="music-toggle" aria-label="배경 음악 켜기" aria-pressed="false" title="배경 음악 켜기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+          </button>
+          <button class="icon-button" id="share" aria-label="프로필 공유" title="공유">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 16V3m0 0L7.5 7.5M12 3l4.5 4.5" />
+              <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7" />
+            </svg>
+          </button>
+        </div>
       </div>
       <header class="intro">
         <div class="avatar-wrap">
@@ -136,6 +157,7 @@
     </article>
   </main>
   <div class="toast" role="status" aria-live="polite"></div>
+  <div class="arrival-burst" id="arrival-burst" aria-hidden="true"></div>
   <script>
     const toast = document.querySelector('.toast');
     let toastTimer;
@@ -145,6 +167,78 @@
       catch { message('브라우저 메뉴에서 링크를 공유해 주세요'); }
     });
     document.querySelector('#business').addEventListener('click', () => message('비즈니스 제안은 프로필 운영자에게 문의해 주세요'));
+
+    const avatarWrap = document.querySelector('.avatar-wrap');
+    const burst = document.querySelector('#arrival-burst');
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const bounds = avatarWrap.getBoundingClientRect();
+      const centerX = bounds.left + bounds.width / 2;
+      const centerY = bounds.top + bounds.height / 2;
+      const colors = ['#ed9a88', '#e9bd74', '#a9b895', '#d8a2ad', '#f0c9b0'];
+      for (let i = 0; i < 18; i++) {
+        const angle = (Math.PI * 2 * i) / 18 - Math.PI / 2;
+        const distance = 42 + (i % 3) * 14;
+        const particle = document.createElement('span');
+        particle.className = `burst-particle ${i % 3 === 0 ? 'dot' : 'star'}`;
+        particle.style.setProperty('--left', `${centerX}px`);
+        particle.style.setProperty('--top', `${centerY}px`);
+        particle.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+        particle.style.setProperty('--turn', `${(i % 2 ? 1 : -1) * (45 + i * 8)}deg`);
+        particle.style.setProperty('--delay', `${(i % 4) * 24}ms`);
+        particle.style.setProperty('--color', colors[i % colors.length]);
+        burst.append(particle);
+      }
+      requestAnimationFrame(() => {
+        avatarWrap.classList.add('arriving');
+        burst.classList.add('play');
+      });
+      window.setTimeout(() => { burst.replaceChildren(); avatarWrap.classList.remove('arriving'); }, 1500);
+    }
+
+    let musicContext;
+    let musicTimer;
+    let musicIndex = 0;
+    const musicButton = document.querySelector('#music-toggle');
+    const melody = [523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46];
+    function playMusicNote(frequency) {
+      if (!musicContext || musicContext.state !== 'running') return;
+      const oscillator = musicContext.createOscillator();
+      const volume = musicContext.createGain();
+      const start = musicContext.currentTime;
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(frequency, start);
+      volume.gain.setValueAtTime(0.0001, start);
+      volume.gain.exponentialRampToValueAtTime(0.018, start + 0.12);
+      volume.gain.exponentialRampToValueAtTime(0.0001, start + 1.25);
+      oscillator.connect(volume);
+      volume.connect(musicContext.destination);
+      oscillator.start(start);
+      oscillator.stop(start + 1.28);
+      oscillator.onended = () => { oscillator.disconnect(); volume.disconnect(); };
+    }
+    musicButton.addEventListener('click', async () => {
+      if (musicContext) {
+        window.clearInterval(musicTimer);
+        await musicContext.close();
+        musicContext = undefined;
+        musicButton.setAttribute('aria-pressed', 'false');
+        musicButton.setAttribute('aria-label', '배경 음악 켜기');
+        musicButton.title = '배경 음악 켜기';
+        message('음악을 껐어요');
+        return;
+      }
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) { message('이 브라우저에서는 음악을 재생할 수 없어요'); return; }
+      musicContext = new AudioContextClass();
+      await musicContext.resume();
+      musicButton.setAttribute('aria-pressed', 'true');
+      musicButton.setAttribute('aria-label', '배경 음악 끄기');
+      musicButton.title = '배경 음악 끄기';
+      playMusicNote(melody[musicIndex++ % melody.length]);
+      musicTimer = window.setInterval(() => playMusicNote(melody[musicIndex++ % melody.length]), 760);
+      message('잔잔한 배경 음악을 켰어요');
+    });
   </script>
 </body>
 
